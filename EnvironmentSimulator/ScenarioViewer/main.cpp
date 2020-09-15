@@ -25,11 +25,11 @@
 #include "scenarioenginedll.hpp"
 #include "CommonMini.hpp"
 
-#define DEMONSTRATE_SENSORS 1
+#define DEMONSTRATE_SENSORS 0
 #define DEMONSTRATE_OSI 0
 #define DEMONSTRATE_ROADINFO 0
-#define DEMONSTRATE_THREAD 1
-
+#define DEMONSTRATE_THREAD 0
+#define DEMONSTRATE_CALLBACK 1
 
 #define MAX_N_OBJECTS 10
 #define TIME_STEP 0.017f
@@ -41,6 +41,29 @@ static SE_ScenarioObjectState states[MAX_N_OBJECTS];
 void log_callback(const char *str)
 {
 	printf("%s\n", str);
+}
+
+void objectCallback(SE_ScenarioObjectState* state)
+{
+	const double startTrigTime = 10.0;
+	const double latDist = 3.5;
+	const double duration = 2.0;
+	static bool firstTime = true;
+	static double latOffset0;
+
+	if (SE_GetSimulationTime() > startTrigTime && SE_GetSimulationTime() < startTrigTime + duration)
+	{
+		if (firstTime)
+		{
+			latOffset0 = state->laneOffset;
+			firstTime = false;
+		}
+		else 
+		{
+			double latOffset = latOffset0 + latDist * (SE_GetSimulationTime() - startTrigTime)/duration;
+			SE_ReportObjectRoadPos(state->id, state->timestamp, state->roadId, state->laneId, latOffset, state->s, state->speed);
+		}
+	}
 }
 
 int main(int argc, char *argv[])
@@ -62,6 +85,10 @@ int main(int argc, char *argv[])
 			LOG("Failed to load %s", argv[1]);
 			return -1;
 		}
+
+#if DEMONSTRATE_CALLBACK
+		SE_RegisterObjectCallback(0, objectCallback);
+#endif
 
 #if DEMONSTRATE_SENSORS
 		// Add four sensors around the vehicle

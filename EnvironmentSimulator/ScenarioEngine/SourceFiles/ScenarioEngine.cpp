@@ -71,7 +71,12 @@ void ScenarioEngine::step(double deltaSimTime, bool initial)
 		for (size_t i = 0; i < entities.object_.size(); i++)
 		{
 			if (entities.object_[i]->control_ == Object::Control::EXTERNAL ||
+#if 0
 				entities.object_[i]->control_ == Object::Control::HYBRID_EXTERNAL)
+#else
+				entities.object_[i]->control_ == Object::Control::HYBRID_EXTERNAL ||
+				entities.object_[i]->control_ == Object::Control::INTERNAL)
+#endif
 			{
 				ObjectState o;
 
@@ -290,14 +295,8 @@ void ScenarioEngine::step(double deltaSimTime, bool initial)
 	{
 		Object *obj = entities.object_[i];
 
-		if (initial)
-		{
-			// Report all scenario objects the initial run, to establish initial positions and speed = 0
-			scenarioGateway.reportObject(obj->id_, obj->name_, 
-			static_cast<int>(obj->type_),obj->category_holder_, obj->model_id_, 
-			obj->control_, obj->boundingbox_, simulationTime, 0.0, 0.0, 0.0, &obj->pos_);
-		}
-		else if (obj->control_ == Object::Control::INTERNAL ||
+		if (initial || // Report all scenario objects the initial run, to establish initial states
+			obj->control_ == Object::Control::INTERNAL ||
 			obj->control_ == Object::Control::HYBRID_GHOST ||
 			obj->control_ == Object::Control::SUMO)
 		{
@@ -309,7 +308,6 @@ void ScenarioEngine::step(double deltaSimTime, bool initial)
 
 	// update positions to sumo
 	sumocontroller->updatePositions();
-
 	
 	if (all_done)
 	{
