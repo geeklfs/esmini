@@ -47,12 +47,13 @@ public:
 		VIEWER_STATE_DONE
 	} ViewerState;
 
-	typedef void (*ObjCallbackFunc)(ObjectStateStruct*);
+	typedef void (*ObjCallbackFunc)(ObjectStateStruct*, void*);
 
 	typedef struct 
 	{
 		int id;
 		ObjCallbackFunc func;
+		void* data;
 	} ObjCallback;
 
 	ScenarioPlayer(int &argc, char *argv[]);
@@ -67,7 +68,7 @@ public:
 	void SetFixedTimestep(double timestep) { fixed_timestep_ = timestep; }
 	double GetFixedTimestep() { return fixed_timestep_; }
 	int GetOSIFreq() { return osi_freq_; }
-	void RegisterObjCallback(int id, ObjCallbackFunc func);
+	void RegisterObjCallback(int id, ObjCallbackFunc func, void *data);
 	
 	CSV_Logger *CSV_Log;
 	ScenarioEngine *scenarioEngine;

@@ -206,7 +206,7 @@ void ScenarioPlayer::ScenarioFrame(double timestep_s)
 		{
 			ObjectStateStruct state;
 			state = os->getStruct();
-			callback[i].func(&state);
+			callback[i].func(&state, callback[i].data);
 		}
 	}
 
@@ -729,10 +729,11 @@ int ScenarioPlayer::Init()
 	return 0;
 }
 
-void ScenarioPlayer::RegisterObjCallback(int id, ObjCallbackFunc func)
+void ScenarioPlayer::RegisterObjCallback(int id, ObjCallbackFunc func, void *data)
 {
 	ObjCallback cb;
 	cb.id = id;
 	cb.func = func;
+	cb.data = data;
 	callback.push_back(cb);
 }

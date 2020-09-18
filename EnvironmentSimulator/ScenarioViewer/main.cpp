@@ -38,18 +38,27 @@
 
 static SE_ScenarioObjectState states[MAX_N_OBJECTS];
 
+typedef struct
+{
+	int counter;
+} Stuff;
+
 void log_callback(const char *str)
 {
 	printf("%s\n", str);
 }
 
-void objectCallback(SE_ScenarioObjectState* state)
+void objectCallback(SE_ScenarioObjectState* state, void *my_data)
 {
-	const double startTrigTime = 10.0;
+	const double startTrigTime = 3.0;
 	const double latDist = 3.5;
-	const double duration = 2.0;
+	const double duration = 5.0;
 	static bool firstTime = true;
 	static double latOffset0;
+
+	Stuff* stuff = (Stuff*)my_data;
+	
+	printf("mydata.counter: %d\n", stuff->counter);
 
 	if (SE_GetSimulationTime() > startTrigTime && SE_GetSimulationTime() < startTrigTime + duration)
 	{
@@ -61,13 +70,15 @@ void objectCallback(SE_ScenarioObjectState* state)
 		else 
 		{
 			double latOffset = latOffset0 + latDist * (SE_GetSimulationTime() - startTrigTime)/duration;
-			SE_ReportObjectRoadPos(state->id, state->timestamp, state->roadId, state->laneId, latOffset, state->s, state->speed);
+//			SE_ReportObjectRoadPos(state->id, state->timestamp, state->roadId, state->laneId, latOffset, state->s, 5);
+			SE_ReportObjectPos(0, state->timestamp, 10, state->y, state->z, state->h, state->p, state->r, 5);
 		}
 	}
 }
 
 int main(int argc, char *argv[])
 {
+	Stuff stuff;
 	// Use logger callback
 	Logger::Inst().SetCallback(log_callback);
 
@@ -79,6 +90,7 @@ int main(int argc, char *argv[])
 
 	for (int a = 0; a < 1; a++)
 	{
+		stuff.counter = 0;
 
 		if (SE_Init(argv[1], 0, 1, 1, 0, 2.0f) != 0)
 		{
@@ -87,7 +99,7 @@ int main(int argc, char *argv[])
 		}
 
 #if DEMONSTRATE_CALLBACK
-		SE_RegisterObjectCallback(0, objectCallback);
+		SE_RegisterObjectCallback(0, objectCallback, (void*)&stuff);
 #endif
 
 #if DEMONSTRATE_SENSORS
@@ -110,6 +122,7 @@ int main(int argc, char *argv[])
 				return 0;
 			}
 
+			stuff.counter++;
 #if DEMONSTRATE_OSI  // set to 1 to demonstrate example of how to query OSI Ground Truth
 
 			int svSize = 0;

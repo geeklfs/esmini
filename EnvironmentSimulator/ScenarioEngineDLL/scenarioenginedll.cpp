@@ -28,7 +28,8 @@ static std::vector<std::string> args_v;
 typedef struct
 {
 	int id;
-	void (*func)(SE_ScenarioObjectState*);
+	void (*func)(SE_ScenarioObjectState*, void*);
+	void* data;
 } SE_ObjCallback;
 
 static std::vector<SE_ObjCallback> objCallback;
@@ -643,7 +644,7 @@ extern "C"
 		return 0;
 	}
 
-	void callback(ObjectStateStruct* state)
+	void callback(ObjectStateStruct* state, void* my_data)
 	{
 		for (size_t i = 0; i < objCallback.size(); i++)
 		{
@@ -651,12 +652,12 @@ extern "C"
 			{
 				SE_ScenarioObjectState se_state;
 				copyStateFromScenarioGateway(&se_state, state);
-				objCallback[i].func(&se_state);
+				objCallback[i].func(&se_state, my_data);
 			}
 		}
 	}
 
-	SE_DLL_API void SE_RegisterObjectCallback(int object_id, void (*fnPtr)(SE_ScenarioObjectState*))
+	SE_DLL_API void SE_RegisterObjectCallback(int object_id, void (*fnPtr)(SE_ScenarioObjectState*, void*), void *user_data)
 	{
 		if (player == 0 || object_id >= player->scenarioGateway->getNumberOfObjects())
 		{
@@ -666,6 +667,6 @@ extern "C"
 		cb.id = object_id;
 		cb.func = fnPtr;
 		objCallback.push_back(cb);
-		player->RegisterObjCallback(object_id, callback);
+		player->RegisterObjCallback(object_id, callback, user_data);
 	}
 }
